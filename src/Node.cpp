@@ -1,13 +1,16 @@
+#include <algorithm>
 #include "Node.h"
 
 #define DUMMY_CHAR -1
 
 Node::Node(char value, int frequency) : Node(value, frequency, nullptr, nullptr)
 {
+    this->maxLeafFrequency = frequency;
 }
 
 Node::Node(int frequency, Node *left, Node *right) : Node(DUMMY_CHAR, frequency, left, right)
 {
+    this->maxLeafFrequency = std::max(left->maxLeafFrequency, right->maxLeafFrequency);
 }
 
 bool Node::IsLeaf()

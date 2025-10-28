@@ -6,6 +6,7 @@ class Node
 public:
     char value;
     int frequency;
+    int maxLeafFrequency;
     Node *left;
     Node *right;
     Node(char value, int frequency);

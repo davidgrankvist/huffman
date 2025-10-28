@@ -5,7 +5,7 @@
 std::vector<char> Encoder::Encode(std::string input)
 {
     auto root = CreateTree(input);
-    
+
     std::vector<CodeEntry> entries = {};
     CalculateCodes(root, 0, 0, entries);
 
@@ -31,7 +31,8 @@ Node *Encoder::CreateTree(std::string input)
 
     // PQ with low frequencies at the top
     auto cmp = [](Node *a, Node *b) -> bool
-    { return a->frequency > b->frequency; };
+    { return a->frequency == b->frequency ? a->maxLeafFrequency > b->maxLeafFrequency
+                                          : a->frequency > b->frequency; };
     std::priority_queue<Node *, std::vector<Node *>, decltype(cmp)> pq(cmp);
 
     // Create leaf nodes
@@ -52,9 +53,9 @@ Node *Encoder::CreateTree(std::string input)
     // Construct tree by connecting nodes
     while (pq.size() > 1)
     {
-        auto left = pq.top();
-        pq.pop();
         auto right = pq.top();
+        pq.pop();
+        auto left = pq.top();
         pq.pop();
 
         auto frequency = left->frequency + right->frequency;
@@ -67,9 +68,9 @@ Node *Encoder::CreateTree(std::string input)
     return root;
 }
 
-void Encoder::CalculateCodes(Node* node, int depth, int code, std::vector<CodeEntry>& entries)
+void Encoder::CalculateCodes(Node *node, int depth, int code, std::vector<CodeEntry> &entries)
 {
-    if (node->IsLeaf()) 
+    if (node->IsLeaf())
     {
         CodeEntry entry = {node->value, code, depth};
         entries.push_back(entry);
