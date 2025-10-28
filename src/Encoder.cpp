@@ -5,8 +5,9 @@
 std::vector<char> Encoder::Encode(std::string input)
 {
     auto root = CreateTree(input);
-
-    // Use tree here to calculate the codes
+    
+    std::vector<CodeEntry> entries = {};
+    CalculateCodes(root, 0, 0, entries);
 
     return std::vector<char>();
 }
@@ -64,4 +65,17 @@ Node *Encoder::CreateTree(std::string input)
     pq.pop();
 
     return root;
+}
+
+void Encoder::CalculateCodes(Node* node, int depth, int code, std::vector<CodeEntry>& entries)
+{
+    if (node->IsLeaf()) 
+    {
+        CodeEntry entry = {node->value, code, depth};
+        entries.push_back(entry);
+        return;
+    }
+
+    CalculateCodes(node->left, depth + 1, code << 1, entries);
+    CalculateCodes(node->right, depth + 1, (code << 1) + 1, entries);
 }

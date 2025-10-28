@@ -10,6 +10,11 @@ Node::Node(int frequency, Node *left, Node *right) : Node(DUMMY_CHAR, frequency,
 {
 }
 
+bool Node::IsLeaf()
+{
+    return left == nullptr && right == nullptr;
+}
+
 Node::Node(char value, int frequency, Node *left, Node *right)
 {
     this->value = value;

@@ -10,6 +10,7 @@ public:
     Node *right;
     Node(char value, int frequency);
     Node(int frequency, Node *left, Node *right);
+    bool IsLeaf();
 private:
     Node(char value, int frequency, Node *left, Node *right);
 };
