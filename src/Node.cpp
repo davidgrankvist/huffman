@@ -8,7 +8,7 @@ Node::Node(char value, int frequency) : Node(value, frequency, nullptr, nullptr)
     this->maxLeafFrequency = frequency;
 }
 
-Node::Node(int frequency, Node *left, Node *right) : Node(DUMMY_CHAR, frequency, left, right)
+Node::Node(Node *left, Node *right) : Node(DUMMY_CHAR, left->frequency + right->frequency, left, right)
 {
     this->maxLeafFrequency = std::max(left->maxLeafFrequency, right->maxLeafFrequency);
 }
