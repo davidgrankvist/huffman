@@ -80,7 +80,7 @@ void Encoder::CalculateCodes(Node *node, int depth, int code, std::vector<CodeEn
         auto codeLength = depth;
         Assert(codeLength <= 32, "Codes are assumed to be at most 32 bits.");
 
-        CodeEntry entry = {node->value, code, codeLength};
+        CodeEntry entry = {node->value, code, (char)codeLength};
         entries.push_back(entry);
         return;
     }
@@ -89,7 +89,7 @@ void Encoder::CalculateCodes(Node *node, int depth, int code, std::vector<CodeEn
     CalculateCodes(node->right, depth + 1, (code << 1) + 1, entries);
 }
 
-std::map<char, CodeEntry> Encoder::CreateEntryMap(std::vector<CodeEntry> entries)
+std::map<char, CodeEntry> Encoder::CreateEntryMap(std::vector<CodeEntry>& entries)
 {
     std::map<char, CodeEntry> codeEntryByValue = {};
     for (int i = 0; i < entries.size(); i++) 
@@ -101,15 +101,16 @@ std::map<char, CodeEntry> Encoder::CreateEntryMap(std::vector<CodeEntry> entries
     return codeEntryByValue;
 }
 
-void Encoder::WriteBytes(int value, std::vector<char> buffer)
+void Encoder::WriteBytes(int value, std::vector<char>& buffer)
 {
+    // Little endian
     buffer.push_back(value & 0xFF);
     buffer.push_back((value >> 8) & 0xFF);
     buffer.push_back((value >> 16) & 0xFF);
     buffer.push_back((value >> 24) & 0xFF);
 }
 
-void Encoder::SerializeEntries(std::vector<CodeEntry> entries, std::vector<char> buffer)
+void Encoder::SerializeEntries(std::vector<CodeEntry>& entries, std::vector<char>& buffer)
 {
     int count = entries.size();
     WriteBytes(count, buffer);
@@ -123,7 +124,7 @@ void Encoder::SerializeEntries(std::vector<CodeEntry> entries, std::vector<char>
     }
 }
 
-std::vector<char> Encoder::EncodeInput(std::string input, std::vector<CodeEntry> entries, std::map<char, CodeEntry> codeEntryByValue)
+std::vector<char> Encoder::EncodeInput(std::string input, std::vector<CodeEntry>& entries, std::map<char, CodeEntry>& codeEntryByValue)
 {
     std::vector<char> buffer = {};
 
@@ -138,4 +139,4 @@ std::vector<char> Encoder::EncodeInput(std::string input, std::vector<CodeEntry>
     }
 
     return buffer;
-}
+} 

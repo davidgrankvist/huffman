@@ -22,10 +22,10 @@ public:
 private:
     Node* CreateTree(std::string input);
     void CalculateCodes(Node* node, int depth, int code, std::vector<CodeEntry>& entries);
-    std::map<char, CodeEntry> CreateEntryMap(std::vector<CodeEntry> entries);
-    void WriteBytes(int value, std::vector<char> buffer);
-    void SerializeEntries(std::vector<CodeEntry> entries, std::vector<char> buffer);
-    std::vector<char> EncodeInput(std::string input, std::vector<CodeEntry> entries, std::map<char, CodeEntry> codeEntryByValue);
+    std::map<char, CodeEntry> CreateEntryMap(std::vector<CodeEntry>& entries);
+    void WriteBytes(int value, std::vector<char>& buffer);
+    void SerializeEntries(std::vector<CodeEntry>& entries, std::vector<char>& buffer);
+    std::vector<char> EncodeInput(std::string input, std::vector<CodeEntry>& entries, std::map<char, CodeEntry>& codeEntryByValue);
 };
 
 #endif
