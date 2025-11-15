@@ -11,6 +11,11 @@ BitStream::BitStream(std::vector<char>& buffer) : buffer(buffer)
 
 void BitStream::WriteBits(int value, int numBits)
 {
+    if (buffer.size() == 0)
+    {
+        buffer.push_back(0);
+    }
+    
     while (numBits > 0)
     {
         auto bitsRemainingInByte = BITS_PER_BYTE - currentBitCount;
@@ -34,4 +39,9 @@ void BitStream::WriteBits(int value, int numBits)
             currentBitCount = 0;
         }
     }
+}
+
+int BitStream::BitCount()
+{
+    return currentBitCount;
 }

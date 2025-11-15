@@ -134,14 +134,21 @@ std::vector<char> Encoder::EncodeInput(std::string input, std::vector<CodeEntry>
     std::vector<char> buffer = {};
 
     SerializeEntries(entries, buffer);
-
-    auto bitStream = new BitStream(buffer);
+    
+    std::vector<char> bitStreamBuffer = {};
+    auto bitStream = new BitStream(bitStreamBuffer);
     for (int i = 0; i < input.size(); i++)
     {
         auto c = input[i];
         auto entry = codeEntryByValue[c];
         bitStream->WriteBits(entry.code, entry.codeLength);
     }
+
+    // Keep track of the number of bits written to the final byte by including it in the header.
+    buffer.push_back(bitStream->BitCount());
+
+    // Append the data.
+    buffer.insert(buffer.end(), bitStreamBuffer.begin(), bitStreamBuffer.end());
 
     return buffer;
 }
@@ -179,7 +186,7 @@ int Encoder::DeserializeEntries(std::vector<char> &input, std::vector<CodeEntry>
 
 Node *Encoder::CreateTreeFromEntries(std::vector<CodeEntry> &entries)
 {
-    auto root = new Node(nullptr, nullptr);
+    auto root = new Node();
 
     for (int i = 0; i < entries.size(); i++)
     {
@@ -203,7 +210,7 @@ void Encoder::CreatePathFromEntry(Node *root, CodeEntry entry)
         {
             if (node->right == nullptr)
             {
-                node->right = new Node(nullptr, nullptr);
+                node->right = new Node();
             }
             node = node->right;
         }
@@ -211,7 +218,7 @@ void Encoder::CreatePathFromEntry(Node *root, CodeEntry entry)
         {
             if (node->left == nullptr)
             {
-                node->left = new Node(nullptr, nullptr);
+                node->left = new Node();
             }
             node = node->left;
         }
@@ -229,10 +236,40 @@ void Encoder::CreatePathFromEntry(Node *root, CodeEntry entry)
 std::string Encoder::DecodeInput(std::vector<char> &input, int index, Node *root)
 {
     std::vector<char> result = {};
+    int numBitsInFinalByte = input[index];
 
-    AssertTodo();
-    for (int i = 0; i < input.size(); i++)
+    auto node = root;
+    for (int i = index + 1; i < input.size(); i++)
     {
+        char numBits = 8; 
+        if (index == input.size() - 1) 
+        {
+            numBits = numBitsInFinalByte;
+        }
+
+        // Not at all optimized approach: consume one bit at a time and walk the tree.
+        char value = input[i];
+        while (numBits > 0)
+        {
+            char bit = value >> (numBits - 1);
+            if (bit)
+            {
+                node = node->right;
+            }
+            else 
+            {
+                node = node->left;
+            }
+
+            if (node->IsLeaf())
+            {
+                result.push_back(node->value);
+                node = root;
+            }
+
+            numBits--;
+            value >>= 1;
+        }
     }
 
     auto decoded = std::string(result.begin(), result.end());

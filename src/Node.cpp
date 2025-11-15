@@ -13,6 +13,11 @@ Node::Node(Node *left, Node *right) : Node(DUMMY_CHAR, left->frequency + right->
     this->maxLeafFrequency = std::max(left->maxLeafFrequency, right->maxLeafFrequency);
 }
 
+Node::Node() : Node(0, 0, nullptr, nullptr)
+{
+
+}
+
 bool Node::IsLeaf()
 {
     return left == nullptr && right == nullptr;

@@ -13,6 +13,8 @@ public:
     Node(char value, int frequency);
     // Create a parent node, combining the children frequencies.
     Node(Node *left, Node *right);
+    // For creating nodes when reconstructing the tree and frequencies are not needed.
+    Node();
     bool IsLeaf();
 private:
     // Internal constructor to create either a leaf or a parent.
