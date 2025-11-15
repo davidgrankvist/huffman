@@ -20,7 +20,12 @@ std::vector<char> Encoder::Encode(std::string input)
 
 std::string Encoder::Decode(std::vector<char> input)
 {
-    return std::string();
+    std::vector<CodeEntry> entries = {};
+    auto index = DeserializeEntries(input, entries);
+    auto root = CreateTreeFromEntries(entries);
+    auto decoded = DecodeInput(input, index, root);
+
+    return decoded;
 }
 
 Node *Encoder::CreateTree(std::string input)
@@ -89,10 +94,10 @@ void Encoder::CalculateCodes(Node *node, int depth, int code, std::vector<CodeEn
     CalculateCodes(node->right, depth + 1, (code << 1) + 1, entries);
 }
 
-std::map<char, CodeEntry> Encoder::CreateEntryMap(std::vector<CodeEntry>& entries)
+std::map<char, CodeEntry> Encoder::CreateEntryMap(std::vector<CodeEntry> &entries)
 {
     std::map<char, CodeEntry> codeEntryByValue = {};
-    for (int i = 0; i < entries.size(); i++) 
+    for (int i = 0; i < entries.size(); i++)
     {
         auto entry = entries[i];
         codeEntryByValue[entry.value] = entry;
@@ -101,7 +106,7 @@ std::map<char, CodeEntry> Encoder::CreateEntryMap(std::vector<CodeEntry>& entrie
     return codeEntryByValue;
 }
 
-void Encoder::WriteBytes(int value, std::vector<char>& buffer)
+void Encoder::WriteBytes(int value, std::vector<char> &buffer)
 {
     // Little endian
     buffer.push_back(value & 0xFF);
@@ -110,7 +115,7 @@ void Encoder::WriteBytes(int value, std::vector<char>& buffer)
     buffer.push_back((value >> 24) & 0xFF);
 }
 
-void Encoder::SerializeEntries(std::vector<CodeEntry>& entries, std::vector<char>& buffer)
+void Encoder::SerializeEntries(std::vector<CodeEntry> &entries, std::vector<char> &buffer)
 {
     int count = entries.size();
     WriteBytes(count, buffer);
@@ -124,14 +129,14 @@ void Encoder::SerializeEntries(std::vector<CodeEntry>& entries, std::vector<char
     }
 }
 
-std::vector<char> Encoder::EncodeInput(std::string input, std::vector<CodeEntry>& entries, std::map<char, CodeEntry>& codeEntryByValue)
+std::vector<char> Encoder::EncodeInput(std::string input, std::vector<CodeEntry> &entries, std::map<char, CodeEntry> &codeEntryByValue)
 {
     std::vector<char> buffer = {};
 
     SerializeEntries(entries, buffer);
 
     auto bitStream = new BitStream(buffer);
-    for (int i = 0; i < input.size(); i++) 
+    for (int i = 0; i < input.size(); i++)
     {
         auto c = input[i];
         auto entry = codeEntryByValue[c];
@@ -139,4 +144,97 @@ std::vector<char> Encoder::EncodeInput(std::string input, std::vector<CodeEntry>
     }
 
     return buffer;
-} 
+}
+
+int Encoder::ReadInt(std::vector<char> &input, int index)
+{
+    int result = input[index] | (input[index + 1] << 8) | (input[index + 2] << 16) | (input[index + 3] << 24);
+
+    return result;
+}
+
+CodeEntry Encoder::ReadEntry(std::vector<char> &input, int index)
+{
+    char value = input[index];
+    int code = ReadInt(input, index + 1);
+    char codeLength = input[index + 5];
+
+    return {value, code, codeLength};
+}
+
+int Encoder::DeserializeEntries(std::vector<char> &input, std::vector<CodeEntry> &entries)
+{
+    int count = ReadInt(input, 0);
+    int inputIndex = sizeof(int);
+
+    for (int i = 0; i < count; i++)
+    {
+        auto entry = ReadEntry(input, inputIndex);
+        entries.push_back(entry);
+        inputIndex += sizeof(CodeEntry);
+    }
+
+    return inputIndex;
+}
+
+Node *Encoder::CreateTreeFromEntries(std::vector<CodeEntry> &entries)
+{
+    auto root = new Node(nullptr, nullptr);
+
+    for (int i = 0; i < entries.size(); i++)
+    {
+        auto entry = entries[i];
+        CreatePathFromEntry(root, entry);
+    }
+
+    return root;
+}
+
+void Encoder::CreatePathFromEntry(Node *root, CodeEntry entry)
+{
+    auto node = root;
+
+    int code = entry.code;
+    char numBits = entry.codeLength;
+    while (numBits > 0)
+    {
+        char bit = code >> (numBits - 1);
+        if (bit)
+        {
+            if (node->right == nullptr)
+            {
+                node->right = new Node(nullptr, nullptr);
+            }
+            node = node->right;
+        }
+        else 
+        {
+            if (node->left == nullptr)
+            {
+                node->left = new Node(nullptr, nullptr);
+            }
+            node = node->left;
+        }
+
+        if (numBits == 1)
+        {
+            node->value = entry.value;
+        }
+
+        numBits--;
+        code >>= 1;
+    }
+}
+
+std::string Encoder::DecodeInput(std::vector<char> &input, int index, Node *root)
+{
+    std::vector<char> result = {};
+
+    AssertTodo();
+    for (int i = 0; i < input.size(); i++)
+    {
+    }
+
+    auto decoded = std::string(result.begin(), result.end());
+    return decoded;
+}
