@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#define BITS_PER_BYTE 8
+
 class BitStream
 {
     public:

@@ -2,8 +2,6 @@
 #include "BitStream.h"
 #include "asserts.h"
 
-#define BITS_PER_BYTE 8
-
 BitStream::BitStream(std::vector<char>& buffer) : buffer(buffer)
 {
     currentBitCount = 0;
@@ -15,7 +13,7 @@ void BitStream::WriteBits(int value, int numBits)
     {
         buffer.push_back(0);
     }
-    
+
     while (numBits > 0)
     {
         auto bitsRemainingInByte = BITS_PER_BYTE - currentBitCount;

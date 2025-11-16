@@ -5,6 +5,8 @@
 #include "Node.h"
 #include "BitStream.h"
 
+#define READ_NTH_BIT(value, n) ((value >> (n - 1)) & 1)
+
 std::vector<char> Encoder::Encode(std::string input)
 {
     auto root = CreateTree(input);
@@ -123,7 +125,7 @@ void Encoder::SerializeEntries(std::vector<CodeEntry> &entries, std::vector<char
     for (int i = 0; i < count; i++)
     {
         auto entry = entries[i];
-        buffer.push_back(entry.code);
+        buffer.push_back(entry.value);
         WriteBytes(entry.code, buffer);
         buffer.push_back(entry.codeLength);
     }
@@ -134,7 +136,7 @@ std::vector<char> Encoder::EncodeInput(std::string input, std::vector<CodeEntry>
     std::vector<char> buffer = {};
 
     SerializeEntries(entries, buffer);
-    
+
     std::vector<char> bitStreamBuffer = {};
     auto bitStream = new BitStream(bitStreamBuffer);
     for (int i = 0; i < input.size(); i++)
@@ -178,7 +180,7 @@ int Encoder::DeserializeEntries(std::vector<char> &input, std::vector<CodeEntry>
     {
         auto entry = ReadEntry(input, inputIndex);
         entries.push_back(entry);
-        inputIndex += sizeof(CodeEntry);
+        inputIndex += 6;
     }
 
     return inputIndex;
@@ -205,7 +207,7 @@ void Encoder::CreatePathFromEntry(Node *root, CodeEntry entry)
     char numBits = entry.codeLength;
     while (numBits > 0)
     {
-        char bit = code >> (numBits - 1);
+        char bit = READ_NTH_BIT(code, numBits);
         if (bit)
         {
             if (node->right == nullptr)
@@ -214,7 +216,7 @@ void Encoder::CreatePathFromEntry(Node *root, CodeEntry entry)
             }
             node = node->right;
         }
-        else 
+        else
         {
             if (node->left == nullptr)
             {
@@ -229,7 +231,6 @@ void Encoder::CreatePathFromEntry(Node *root, CodeEntry entry)
         }
 
         numBits--;
-        code >>= 1;
     }
 }
 
@@ -238,25 +239,29 @@ std::string Encoder::DecodeInput(std::vector<char> &input, int index, Node *root
     std::vector<char> result = {};
     int numBitsInFinalByte = input[index];
 
+    // Not at all optimized approach: check one bit at a time and walk the tree.
     auto node = root;
     for (int i = index + 1; i < input.size(); i++)
     {
-        char numBits = 8; 
-        if (index == input.size() - 1) 
+        char value = input[i];
+        char numBits = BITS_PER_BYTE;
+
+        // The final byte may have some padding bits to skip.
+        if (i == input.size() - 1)
         {
             numBits = numBitsInFinalByte;
+            value >>= BITS_PER_BYTE - numBitsInFinalByte;
         }
 
-        // Not at all optimized approach: consume one bit at a time and walk the tree.
-        char value = input[i];
+        // Consume bits from the current byte and append to the result if a leaf node is found.
         while (numBits > 0)
         {
-            char bit = value >> (numBits - 1);
+            char bit = READ_NTH_BIT(value, numBits);
             if (bit)
             {
                 node = node->right;
             }
-            else 
+            else
             {
                 node = node->left;
             }
@@ -268,7 +273,6 @@ std::string Encoder::DecodeInput(std::vector<char> &input, int index, Node *root
             }
 
             numBits--;
-            value >>= 1;
         }
     }
 
